@@ -1,3 +1,4 @@
+import errno
 import logging
 import os
 import platform
@@ -5,7 +6,7 @@ import re
 import shutil
 import stat
 import threading
-from typing import BinaryIO, Union
+from typing import BinaryIO, Optional, Union
 
 StrPath = Union[str, "os.PathLike[str]"]
 
@@ -27,6 +28,55 @@ def mkdir_exists_ok(dir_name: StrPath) -> None:
         raise FileExistsError(f"{dir_name!s} exists and is not a directory") from e
     except PermissionError as e:
         raise PermissionError(f"{dir_name!s} is not writable") from e
+
+
+def check_available_space(
+    path: StrPath,
+    size: Optional[int] = None,
+    reserve: int = 0,
+) -> int:
+    """Check that `path` has at least `size` + `reserve` available.
+
+    Args:
+        path: The path whose file system will be checked. It can be a file intended to
+            be written to, in which case `size` is optional.
+        reserve: The number of bytes to reserve on `path` in addition to the bytes
+            requested. [default: 0]
+        size: The number of bytes that will be written to `path`. If None, then
+            `path` must be a real file and its size will be used. [default: None]
+
+    Returns:
+        The number of bytes available, minus `reserve` and `size`.
+
+    Raises:
+        OSError [28]: if `path` has less than `size` available.
+        ValueError: if `size` is not None and `path` is not a real file.
+    """
+    if size is None:
+        if not os.path.isfile(path):
+            raise ValueError(
+                "If `size` is not specified then `path` must be a real file."
+            )
+        size = os.stat(path).st_size
+
+    usage = shutil.disk_usage(path)
+    remaining_bytes = usage.free - size
+
+    if remaining_bytes < reserve:
+        raise OSError(
+            errno.ENOSPC,  # No space left on device
+            f"{path!s} has only {usage.free} bytes available, but {size} bytes "
+            f" are required, which would leave only {remaining_bytes} bytes available, "
+            f"which is less than the requested {reserve} bytes. You can set "
+            "WANDB_MINIMUM_FREE_SPACE to a lower value, use a disk with more space, or "
+            "delete some files to allow this copy to proceed.",
+        )
+    if remaining_bytes - reserve < size:
+        # One more write of this size would exceed the available space.
+        logger.warning(
+            f"Running low on disk space. Only {remaining_bytes - reserve} bytes "
+            f"bytes available for use. (reserving {reserve} to avoid system errors)"
+        )
 
 
 class WriteSerializingFile:
