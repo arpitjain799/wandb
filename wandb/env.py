@@ -72,6 +72,7 @@ JUPYTER = "WANDB_JUPYTER"
 CONFIG_DIR = "WANDB_CONFIG_DIR"
 DATA_DIR = "WANDB_DATA_DIR"
 CACHE_DIR = "WANDB_CACHE_DIR"
+MINIMUM_FREE_SPACE = "WANDB_MINIMUM_FREE_SPACE"
 DISABLE_SSL = "WANDB_INSECURE_DISABLE_SSL"
 SERVICE = "WANDB_SERVICE"
 _DISABLE_SERVICE = "WANDB_DISABLE_SERVICE"
@@ -117,6 +118,7 @@ def immutable_keys() -> List[str]:
         HOST,
         DATA_DIR,
         CACHE_DIR,
+        MINIMUM_FREE_SPACE,
         USE_V1_ARTIFACTS,
         DISABLE_SSL,
     ]
@@ -360,6 +362,21 @@ def get_cache_dir(env: Optional[Env] = None) -> str:
     if env is None:
         env = os.environ
     val = env.get(CACHE_DIR, default_dir)
+    return val
+
+
+def get_minimum_free_space(
+    env: Optional[Env] = None, default: int = 1_000_000_000
+) -> int:
+    if env is None:
+        env = os.environ
+    val = env.get(MINIMUM_FREE_SPACE, default)
+    try:
+        val = int(val)  # type: ignore
+    except ValueError:
+        val = default
+    if val < 0:
+        val = default
     return val
 
 
