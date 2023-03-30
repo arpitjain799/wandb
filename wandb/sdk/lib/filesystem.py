@@ -6,6 +6,7 @@ import re
 import shutil
 import stat
 import threading
+from pathlib import Path
 from typing import BinaryIO, Optional, Union
 
 StrPath = Union[str, "os.PathLike[str]"]
@@ -52,13 +53,17 @@ def check_available_space(
         OSError [28]: if `path` has less than `size` available.
         ValueError: if `size` is not None and `path` is not a real file.
     """
+    path = Path(path)
     if size is None:
-        if not os.path.isfile(path):
+        if not path.is_file():
             raise ValueError(
                 "If `size` is not specified then `path` must be a real file."
             )
         size = os.stat(path).st_size
 
+    # The path might be theoretical, so find the nearest parent that actually exists.
+    while not path.exists():
+        path = path.parent
     usage = shutil.disk_usage(path)
     remaining_bytes = usage.free - size
 
