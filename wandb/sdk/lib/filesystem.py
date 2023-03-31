@@ -66,7 +66,7 @@ def check_available_space(
     # The path might be theoretical, so find the nearest parent that actually exists.
     while not path.exists():
         path = path.parent
-    usage = psutil.disk_usage(path)
+    usage = psutil.disk_usage(str(path))
     remaining_bytes = usage.free - size
 
     if remaining_bytes < reserve:
