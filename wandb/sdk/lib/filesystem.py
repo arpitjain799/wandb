@@ -9,6 +9,8 @@ import threading
 from pathlib import Path
 from typing import BinaryIO, Optional, Union
 
+import psutil
+
 StrPath = Union[str, "os.PathLike[str]"]
 
 logger = logging.getLogger(__name__)
@@ -53,7 +55,7 @@ def check_available_space(
         OSError [28]: if `path` has less than `size` available.
         ValueError: if `size` is not None and `path` is not a real file.
     """
-    path = Path(path)
+    path = Path(path).resolve()
     if size is None:
         if not path.is_file():
             raise ValueError(
@@ -64,10 +66,7 @@ def check_available_space(
     # The path might be theoretical, so find the nearest parent that actually exists.
     while not path.exists():
         path = path.parent
-    try:
-        usage = shutil.disk_usage(path)
-    except FileNotFoundError:
-        logger.error(f"cannot check usage on {path}")
+    usage = psutil.disk_usage(path)
     remaining_bytes = usage.free - size
 
     if remaining_bytes < reserve:
