@@ -64,7 +64,10 @@ def check_available_space(
     # The path might be theoretical, so find the nearest parent that actually exists.
     while not path.exists():
         path = path.parent
-    usage = shutil.disk_usage(path)
+    try:
+        usage = shutil.disk_usage(path)
+    except FileNotFoundError:
+        logger.error(f"cannot check usage on {path}")
     remaining_bytes = usage.free - size
 
     if remaining_bytes < reserve:
