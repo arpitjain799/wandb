@@ -372,7 +372,7 @@ def get_minimum_free_space(
         env = os.environ
     val = env.get(MINIMUM_FREE_SPACE, default)
     try:
-        val = int(val)  # type: ignore
+        val = int(val)
     except ValueError:
         val = default
     if val < 0:

@@ -84,6 +84,7 @@ def check_available_space(
             f"Running low on disk space. Only {remaining_bytes - reserve} bytes "
             f"bytes available for use. (reserving {reserve} to avoid system errors)"
         )
+    return remaining_bytes
 
 
 class WriteSerializingFile:
