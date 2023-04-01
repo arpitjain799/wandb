@@ -63,12 +63,11 @@ def check_available_space(
 
     # The path might be theoretical, so find the nearest parent that actually exists.
     while not path.exists():
-        logger.warning(f"{path!s} does not exist, checking parent directory.")
         path = path.parent
     usage = shutil.disk_usage(str(path))
     remaining_bytes = usage.free - size
 
-    if remaining_bytes < reserve:
+    if remaining_bytes <= reserve:
         raise OSError(
             errno.ENOSPC,  # No space left on device
             f"{path!s} has only {usage.free} bytes available, but {size} bytes "
@@ -77,13 +76,13 @@ def check_available_space(
             "WANDB_MINIMUM_FREE_SPACE to a lower value, use a disk with more space, or "
             "delete some files to allow this copy to proceed.",
         )
-    if remaining_bytes - reserve < size:
+    if remaining_bytes - reserve <= size:
         # One more write of this size would exceed the available space.
         logger.warning(
             f"Running low on disk space. Only {remaining_bytes - reserve} bytes "
             f"bytes available for use. (reserving {reserve} to avoid system errors)"
         )
-    return remaining_bytes
+    return remaining_bytes - reserve
 
 
 class WriteSerializingFile:
