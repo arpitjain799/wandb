@@ -365,9 +365,7 @@ def get_cache_dir(env: Optional[Env] = None) -> str:
     return val
 
 
-def get_minimum_free_space(
-    env: Optional[Env] = None, default: int = 1_000_000_000
-) -> int:
+def get_minimum_free_space(env: Optional[Env] = None, default: int = 1_000_000) -> int:
     if env is None:
         env = os.environ
     val = env.get(MINIMUM_FREE_SPACE, default)
