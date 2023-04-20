@@ -9,7 +9,7 @@ import stat
 import tempfile
 import threading
 from pathlib import Path
-from typing import IO, Any, BinaryIO, Optional, Generator, Union
+from typing import IO, Any, BinaryIO, Generator, Optional, Union
 
 StrPath = Union[str, "os.PathLike[str]"]
 
