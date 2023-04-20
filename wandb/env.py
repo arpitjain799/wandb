@@ -71,6 +71,7 @@ ANONYMOUS = "WANDB_ANONYMOUS"
 JUPYTER = "WANDB_JUPYTER"
 CONFIG_DIR = "WANDB_CONFIG_DIR"
 DATA_DIR = "WANDB_DATA_DIR"
+ARTIFACT_DIR = "WANDB_ARTIFACT_DIR"
 CACHE_DIR = "WANDB_CACHE_DIR"
 MINIMUM_FREE_SPACE = "WANDB_MINIMUM_FREE_SPACE"
 DISABLE_SSL = "WANDB_INSECURE_DISABLE_SSL"
@@ -117,6 +118,7 @@ def immutable_keys() -> List[str]:
         HTTP_TIMEOUT,
         HOST,
         DATA_DIR,
+        ARTIFACT_DIR,
         CACHE_DIR,
         MINIMUM_FREE_SPACE,
         USE_V1_ARTIFACTS,
@@ -354,6 +356,14 @@ def get_data_dir(env: Optional[Env] = None) -> str:
     if env is None:
         env = os.environ
     val = env.get(DATA_DIR, default_dir)
+    return val
+
+
+def get_artifact_dir(env: Optional[Env] = None) -> str:
+    default_dir = os.path.join(".", "artifacts")
+    if env is None:
+        env = os.environ
+    val = env.get(ARTIFACT_DIR, default_dir)
     return val
 
 
