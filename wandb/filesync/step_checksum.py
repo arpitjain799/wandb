@@ -8,8 +8,9 @@ import shutil
 import threading
 from typing import TYPE_CHECKING, NamedTuple, Optional, Union, cast
 
-from wandb.filesync import dir_watcher, step_upload
+from wandb.filesync import step_upload
 from wandb.sdk.lib import filesystem, runid
+from wandb.sdk.lib.paths import LogicalPath
 
 if TYPE_CHECKING:
     import tempfile
@@ -22,7 +23,7 @@ if TYPE_CHECKING:
 
 class RequestUpload(NamedTuple):
     path: str
-    save_name: dir_watcher.SaveName
+    save_name: LogicalPath
     copy: bool
 
 
@@ -109,9 +110,7 @@ class StepChecksum:
                         self._output_queue.put(
                             step_upload.RequestUpload(
                                 entry.local_path,
-                                dir_watcher.to_save(
-                                    entry.path
-                                ),  # typecast might not be legit
+                                LogicalPath(entry.path),  # typecast might not be legit
                                 req.artifact_id,
                                 entry.digest,
                                 False,

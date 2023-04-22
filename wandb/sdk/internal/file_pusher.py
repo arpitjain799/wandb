@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, Optional, Tuple
 
 import wandb
 import wandb.util
-from wandb.filesync import dir_watcher, stats, step_checksum, step_upload
+from wandb.filesync import stats, step_checksum, step_upload
+from wandb.sdk.lib.paths import LogicalPath
 
 if TYPE_CHECKING:
     from wandb.sdk.interface import artifacts
@@ -114,7 +115,7 @@ class FilePusher:
 
     def file_changed(
         self,
-        save_name: dir_watcher.SaveName,
+        save_name: LogicalPath,
         path: str,
         copy: bool = True,
     ):
@@ -133,7 +134,7 @@ class FilePusher:
 
         event = step_checksum.RequestUpload(
             path,
-            dir_watcher.to_save(save_name),
+            LogicalPath(save_name),
             copy,
         )
         self._incoming_queue.put(event)
