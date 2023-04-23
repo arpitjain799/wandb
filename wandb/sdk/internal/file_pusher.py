@@ -113,12 +113,7 @@ class FilePusher:
     def file_counts_by_category(self) -> stats.FileCountsByCategory:
         return self._stats.file_counts_by_category()
 
-    def file_changed(
-        self,
-        save_name: LogicalPath,
-        path: str,
-        copy: bool = True,
-    ):
+    def file_changed(self, save_name: LogicalPath, path: str, copy: bool = True):
         """Tell the file pusher that a file's changed and should be uploaded.
 
         Arguments:
@@ -132,11 +127,7 @@ class FilePusher:
         if os.path.getsize(path) == 0:
             return
 
-        event = step_checksum.RequestUpload(
-            path,
-            LogicalPath(save_name),
-            copy,
-        )
+        event = step_checksum.RequestUpload(path, save_name, copy)
         self._incoming_queue.put(event)
 
     def store_manifest_files(

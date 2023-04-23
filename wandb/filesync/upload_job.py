@@ -48,7 +48,7 @@ class UploadJob:
         self._file_stream = file_stream
         self.silent = silent
         self.save_name = save_name
-        self.save_path = self.path = path
+        self.save_path = path
         self.artifact_id = artifact_id
         self.md5 = md5
         self.copied = copied

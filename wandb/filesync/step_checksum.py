@@ -110,7 +110,7 @@ class StepChecksum:
                         self._output_queue.put(
                             step_upload.RequestUpload(
                                 entry.local_path,
-                                LogicalPath(entry.path),  # typecast might not be legit
+                                entry.path,
                                 req.artifact_id,
                                 entry.digest,
                                 False,
