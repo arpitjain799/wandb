@@ -9,10 +9,6 @@ from typing import Any, NewType, Union
 # https://github.com/python/typeshed/blob/0b1cd5989669544866213807afa833a88f649ee7/stdlib/_typeshed/__init__.pyi#L56-L65
 StrPath = Union[str, "os.PathLike[str]"]
 
-# A native path to a file on a local filesystem.
-# Ideally it would be a pathlib.Path, but it's too late now.
-FilePathStr = NewType("FilePathStr", str)
-
 # A URI. Likewise, it should be a urllib.parse.ParseResult, but it's too late now.
 URIStr = NewType("URIStr", str)
 
@@ -23,12 +19,8 @@ class LocalPath(str):
     It can be used as a pathlib.Path object.
     """
 
-    def __new__(cls, path: StrPath) -> "LocalPath":
-        if hasattr(path, "__fspath__"):
-            path = path.__fspath__()
-        if isinstance(path, bytes):
-            path = os.fsdecode(path)
-        return super().__new__(cls, str(Path(path)))
+    def __new__(cls, *path_segments: StrPath) -> "LocalPath":
+        return super().__new__(cls, str(Path(*path_segments)))
 
     def to_path(self) -> Path:
         """Convert to a local pathlib.Path."""
