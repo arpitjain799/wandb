@@ -2,8 +2,7 @@ import base64
 import binascii
 import hashlib
 import sys
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, NewType, Union
+from typing import TYPE_CHECKING, Any, NewType, Union
 
 if TYPE_CHECKING:
     import os
@@ -59,24 +58,24 @@ def _md5_file_hasher(*paths: StrPath) -> "hashlib._Hash":
     return md5_hash
 
 
-class Digest(str, ABC):
+class Digest(str):
     def __new__(cls, digest: Union[str, bytes, "Digest"]) -> "Digest":
-        if isinstance(digest, "Digest"):
+        if isinstance(digest, Digest):
             return cls.from_bytes(bytes(digest))
         if isinstance(digest, bytes):
             return cls.from_bytes(digest)
         return super().__new__(cls, digest)
 
-    @abstractmethod
-    def __init__(self) -> None:
+    def __init__(self, *_: Any) -> None:
         """Ensure the input is a valid digest."""
+        raise NotImplementedError
 
-    @abstractmethod
     def __bytes__(self) -> bytes:
         """Convert to the byte representation if there is one."""
+        raise NotImplementedError
 
-    @abstractmethod
-    def from_bytes(self, bytes_: bytes) -> "Digest":
+    @classmethod
+    def from_bytes(cls, bytes_: bytes) -> "Digest":
         """Convert from the byte representation if there is one."""
 
 
@@ -99,7 +98,7 @@ class MD5Digest(Digest):
 class B64_MD5(MD5Digest):  # noqa: N801
     """Base64 encoded MD5 digest."""
 
-    def __init__(self) -> None:
+    def __init__(self, *_: Any) -> None:
         try:
             assert len(bytes(self)) == 16
         except (AssertionError, ValueError, binascii.Error) as e:
@@ -108,14 +107,15 @@ class B64_MD5(MD5Digest):  # noqa: N801
     def __bytes__(self) -> bytes:
         return base64.standard_b64decode(self)
 
-    def from_bytes(self, bytes_: bytes) -> Digest:
-        return B64_MD5(base64.standard_b64encode(bytes_).decode("ascii"))
+    @classmethod
+    def from_bytes(cls, bytes_: bytes) -> Digest:
+        return super().__new__(cls, base64.standard_b64encode(bytes_).decode("ascii"))
 
 
 class Hex_MD5(MD5Digest):  # noqa: N801
     """Hex encoded MD5 digest."""
 
-    def __init__(self) -> None:
+    def __init__(self, *_: Any) -> None:
         try:
             assert len(bytes(self)) == 16
         except (AssertionError, ValueError) as e:
@@ -124,8 +124,9 @@ class Hex_MD5(MD5Digest):  # noqa: N801
     def __bytes__(self) -> bytes:
         return bytes.fromhex(self)
 
-    def from_bytes(self, bytes_: bytes) -> Digest:
-        return Hex_MD5(bytes_.hex())
+    @classmethod
+    def from_bytes(cls, bytes_: bytes) -> Digest:
+        return super().__new__(cls, bytes_.hex())
 
 
 class E_Tag(Digest):  # noqa: N801
@@ -142,7 +143,7 @@ class E_Tag(Digest):  # noqa: N801
         # Don't change the representation of a Digest.
         return super().__new__(cls, str(digest))
 
-    def __init__(self) -> None:
+    def __init__(self, *_: Any) -> None:
         # A base-64 encoded MD5 is 24 characters long and a hex encoded SHA-512 can be
         # up to 128 characters; lengths outside this range are unreasonable and probably
         # a programming error (e.g. using the contents of the file instead of the ETag).
@@ -170,19 +171,20 @@ class E_Tag(Digest):  # noqa: N801
         try:
             return base64.standard_b64decode(self)
         except (ValueError, binascii.Error):
-            pass
-        # Try an alternate base64 encoding.
-        try:
-            return base64.urlsafe_b64decode(self)
-        except (ValueError, binascii.Error):
+            # Just because we can't do it doesn't mean it's invalid; but this operation
+            # won't succeed so we have to raise an exception.
             raise ValueError(f"Unable to decode ETag: {self!r}")
 
-    def from_bytes(self, bytes_: bytes) -> Digest:
+    @classmethod
+    def from_bytes(cls, bytes_: bytes) -> Digest:
         raise ValueError(f"Unable to construct ETag from byte value: {bytes_!r}")
 
 
 class RefDigest(Digest):
     """Reference "digests" are URIs we use when we can't get the actual digest."""
 
-    def __init__(self) -> None:
+    def __new__(cls, digest: Union[str, Digest]) -> Digest:
+        return super().__new__(cls, str(digest))
+
+    def __init__(self, *_: Any) -> None:
         pass
